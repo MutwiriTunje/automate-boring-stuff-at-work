@@ -3,7 +3,7 @@ asks for the file path
 runs the code and asks for the destination folder
 
 what does it do?
-i made this script to go through the cash receipt and retun the following: bill number, total amount paid, total inclusive and the difference between the two totals.
+i made this script to go through the cash receipt and return the following: bill number, total amount paid, total inclusive and the difference between the two totals.
 the information is stored in a txt file in the designated folder and the file name is the bill number 
 
 problem statement:
