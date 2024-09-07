@@ -1,8 +1,8 @@
 import re
-import PyPDF2
 import os
 import tkinter as tk
 from tkinter import filedialog
+import PyPDF2
 
 def extract_text_from_pdf(pdf_filename):
     try:
@@ -48,33 +48,25 @@ def choose_output_folder():
     return folder_path
 
 def choose_pdf_files():
-    root =tk.Tk()
-    root.withdraw() # Hide the main window
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
 
     file_paths = filedialog.askopenfilenames(filetypes=[("PDF files", "*.pdf")])
     return file_paths
 
-
 # Usage
 pdf_files = choose_pdf_files()
 if pdf_files:
-    output_folder = choose_output_folder() # choose th output folder once
+    output_folder = choose_output_folder()  # Choose the output folder once
     if output_folder:
+        num_files_found = 0  # Initialize the count
         for pdf_filename in pdf_files:
             extracted_text = extract_text_from_pdf(pdf_filename)
             if extracted_text:
                 bill_number, total_paid, total_incl = extract_values_from_text(extracted_text)
-                if total_incl == total_paid:
-                    print('No discount found')
-                    
-                else:
-                    if bill_number and total_paid and total_incl:
-                        difference = calculate_difference(total_paid, total_incl)
-                        print(f"Bill Number: {bill_number}")
-                        print(f"Total Paid: {total_paid:.2f}")
-                        print(f"Total Inclusive: {total_incl:.2f}")
-                        print(f"Difference: {difference:.2f}")
-                        
+                if bill_number and total_paid and total_incl:
+                    difference = calculate_difference(total_paid, total_incl)
+                    if abs(difference) >= 1e-6:  # Check if the difference is significant
                         # Save output to a text file
                         output_filename = os.path.join(output_folder, f"{bill_number}.txt")
                         with open(output_filename, 'w') as output_file:
@@ -83,11 +75,11 @@ if pdf_files:
                             output_file.write(f"Total Inclusive: {total_incl:.2f}\n")
                             output_file.write(f"Difference: {difference:.2f}\n")
                         print(f"Output saved to {output_filename}")
-                    else:
-                        print("No relevant information extracted from the PDF.")
-            else:
-                print(f"Unable to extract relevant information from {pdf_filename}.")
-        else:
-            print("The end!.")
+                        num_files_found += 1  # Increment the count
+                else:
+                    print(f"No relevant information extracted from the PDF: {pdf_filename}.")
+        print(f"Total files processed: {num_files_found}")
+    else:
+        print("No output folder selected.")
 else:
     print("No PDF files selected.")
