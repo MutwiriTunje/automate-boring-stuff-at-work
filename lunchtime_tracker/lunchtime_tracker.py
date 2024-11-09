@@ -19,7 +19,6 @@ def pdf_to_csv(pdf_path, csv_path):
                     for table in tables:
                         for row in table:
                             writer.writerow(row)
-
 # Step 2: Define Shift Analysis Program
 def analyze_shifts(csv_path, is_weekend):
     df = pd.read_csv(csv_path, skiprows=1)
@@ -32,6 +31,7 @@ def analyze_shifts(csv_path, is_weekend):
             "shift_3": (datetime.strptime("12:50:00", "%H:%M:%S").time(), datetime.strptime("13:15:59", "%H:%M:%S").time()),
             "shift_4": (datetime.strptime("13:15:00", "%H:%M:%S").time(), datetime.strptime("13:40:59", "%H:%M:%S").time()),
         }
+        time_limit = ("12:00", "14:00")
     else:
         shift_times = {
             "shift_1": (datetime.strptime("12:00:00", "%H:%M:%S").time(), datetime.strptime("12:45:59", "%H:%M:%S").time()),
@@ -39,6 +39,12 @@ def analyze_shifts(csv_path, is_weekend):
             "shift_3": (datetime.strptime("13:30:00", "%H:%M:%S").time(), datetime.strptime("14:15:59", "%H:%M:%S").time()),
             "shift_4": (datetime.strptime("14:15:00", "%H:%M:%S").time(), datetime.strptime("15:00:59", "%H:%M:%S").time()),
         }
+        time_limit = ("12:00", "16:00")
+
+    df['Time'] = pd.to_datetime(df['Time'], errors='coerce')
+    df = df.dropna(subset=['Time'])
+    df = df[(df['Time'].dt.time >= datetime.strptime(time_limit[0], "%H:%M").time()) & 
+            (df['Time'].dt.time <= datetime.strptime(time_limit[1], "%H:%M").time())]
 
     employee_shifts = {
         '34': "shift_1", '83': "shift_1", '102': "shift_1", '43': "shift_1", '94': "shift_1", '110': "shift_1",
@@ -49,26 +55,18 @@ def analyze_shifts(csv_path, is_weekend):
         '87': "shift_4", '54': "shift_4",
     }
 
-    df['Time'] = pd.to_datetime(df['Time'], errors='coerce')
-    df = df.dropna(subset=['Time']) 
-    df = df[(df['Time'].dt.time >= datetime.strptime("12:00", "%H:%M").time()) & 
-            (df['Time'].dt.time <= datetime.strptime("16:00", "%H:%M").time())]
-
     results = []
-
     for person_id, group in df.groupby('Person ID'):
         if person_id not in employee_shifts:
             continue
-        
+
         shift_name = employee_shifts[person_id]
         shift_start, shift_end = shift_times[shift_name]
-
         group = group.sort_values('Time')
         earliest_check = group['Time'].iloc[0].time()
         latest_check = group['Time'].iloc[-1].time()
 
         out_of_shift_time = 0
-        
         if earliest_check < shift_start or latest_check > shift_end:
             out_of_shift_time = (datetime.combine(datetime.today(), latest_check) - 
                                  datetime.combine(datetime.today(), earliest_check)).total_seconds() / 60
@@ -82,8 +80,8 @@ def analyze_shifts(csv_path, is_weekend):
                 "keyed in at": latest_check
             })
 
-    results_df = pd.DataFrame(results)
-    return results_df
+    return pd.DataFrame(results)
+
 
 
 # Step 3: Create CustomTkinter GUI
