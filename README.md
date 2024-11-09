@@ -1,17 +1,34 @@
-This scripts takes a cash receipt in pdf format
-asks for the file path
-runs the code and asks for the destination folder
+# Automate Boring Stuff at Work
 
-what does it do?
-i made this script to go through the cash receipt and return the following: bill number, total amount paid, total inclusive and the difference between the two totals.
-the information is stored in a txt file in the designated folder and the file name is the bill number 
+This repository contains a collection of scripts and tools developed to streamline and automate repetitive tasks at work, mostly using Python. Each project aims to make daily operations more efficient and reduce manual workload.
 
-problem statement:
-we discovered a number of cash sales were done where the sales discount-on the total paid- did not reflect on the total inclusive which is the report that goes to KRA.
-so i made this script to automate the work and find the discrepancies in the amounts.
+## Overview
 
-usage:
-first install the requirements like so
-pip install -r requirements.txt
-and you are good to go
-i've included two samples: test.pdf and test1.pdf
+In the "Automate Boring Stuff at Work" repository, you’ll find various projects designed to simplify and automate different work-related tasks. Whether it’s data processing, file management, or report generation, these tools help save time and minimize errors in daily routines.
+
+## Contents
+
+This repository includes projects for tasks such as:
+- **Data extraction**: Automating the retrieval and processing of data from files, emails, and online sources.
+- **Report generation**: Creating summary reports for data analysis and visualization.
+- **File management**: Sorting, renaming, and organizing files efficiently.
+- **Task automation**: Automating repetitive operations to improve productivity.
+
+## Projects
+
+Some of the main projects included are:
+1. **Cash Receipt Analyzer** - Analyzes cash receipts for specific data fields and flags discrepancies.
+2. **Lunchtime Lateness Tracker** - Tracks and reports on lateness from lunch breaks.
+3. **Inventory Management Automation** - Helps streamline inventory processes.
+4. **File Organization Tool** - Organizes and renames files based on specific criteria.
+
+## Requirements
+
+These projects are built primarily using Python. For dependencies, check each project’s `requirements.txt` file.
+
+## Installation
+
+To clone this repository:
+```bash
+git clone https://github.com/mutwiritunje/automate-boring-stuff-at-work.git
+```
