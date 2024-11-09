@@ -1,5 +1,3 @@
-Here's a README file for your project:
-
 ```markdown
 # Typewriter Tool for Marjicc ✨
 
