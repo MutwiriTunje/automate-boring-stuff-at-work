@@ -1,12 +1,12 @@
 import pdfplumber  
 import csv
 import pandas as pd
-import webbrowser
 from datetime import datetime
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
-from tkinter import ttk  # Importing ttk for Treeview support
-from PIL import Image  # Only import Image (we'll use CTkImage instead of PhotoImage)
+from tkinter import ttk
+from PIL import Image
+import webbrowser
 
 # Step 1: Define PDF to CSV Conversion Function
 def pdf_to_csv(pdf_path, csv_path):
@@ -21,16 +21,24 @@ def pdf_to_csv(pdf_path, csv_path):
                             writer.writerow(row)
 
 # Step 2: Define Shift Analysis Program
-def analyze_shifts(csv_path):
+def analyze_shifts(csv_path, is_weekend):
     df = pd.read_csv(csv_path, skiprows=1)
     df['Person ID'] = df['Person ID'].astype(str).str.strip("'").str.strip()
 
-    shift_times = {
-        "shift_1": (datetime.strptime("12:00:00", "%H:%M:%S").time(), datetime.strptime("12:45:59", "%H:%M:%S").time()),
-        "shift_2": (datetime.strptime("12:45:00", "%H:%M:%S").time(), datetime.strptime("13:30:59", "%H:%M:%S").time()),
-        "shift_3": (datetime.strptime("13:30:00", "%H:%M:%S").time(), datetime.strptime("14:15:59", "%H:%M:%S").time()),
-        "shift_4": (datetime.strptime("14:15:00", "%H:%M:%S").time(), datetime.strptime("15:00:59", "%H:%M:%S").time()),
-    }
+    if is_weekend:
+        shift_times = {
+            "shift_1": (datetime.strptime("12:00:00", "%H:%M:%S").time(), datetime.strptime("12:25:59", "%H:%M:%S").time()),
+            "shift_2": (datetime.strptime("12:25:00", "%H:%M:%S").time(), datetime.strptime("12:50:59", "%H:%M:%S").time()),
+            "shift_3": (datetime.strptime("12:50:00", "%H:%M:%S").time(), datetime.strptime("13:15:59", "%H:%M:%S").time()),
+            "shift_4": (datetime.strptime("13:15:00", "%H:%M:%S").time(), datetime.strptime("13:40:59", "%H:%M:%S").time()),
+        }
+    else:
+        shift_times = {
+            "shift_1": (datetime.strptime("12:00:00", "%H:%M:%S").time(), datetime.strptime("12:45:59", "%H:%M:%S").time()),
+            "shift_2": (datetime.strptime("12:45:00", "%H:%M:%S").time(), datetime.strptime("13:30:59", "%H:%M:%S").time()),
+            "shift_3": (datetime.strptime("13:30:00", "%H:%M:%S").time(), datetime.strptime("14:15:59", "%H:%M:%S").time()),
+            "shift_4": (datetime.strptime("14:15:00", "%H:%M:%S").time(), datetime.strptime("15:00:59", "%H:%M:%S").time()),
+        }
 
     employee_shifts = {
         '34': "shift_1", '83': "shift_1", '102': "shift_1", '43': "shift_1", '94': "shift_1", '110': "shift_1",
@@ -43,7 +51,7 @@ def analyze_shifts(csv_path):
 
     df['Time'] = pd.to_datetime(df['Time'], errors='coerce')
     df = df.dropna(subset=['Time']) 
-    df = df[(df['Time'].dt.time >= datetime.strptime("12:00", "%H:%M").time()) &
+    df = df[(df['Time'].dt.time >= datetime.strptime("12:00", "%H:%M").time()) & 
             (df['Time'].dt.time <= datetime.strptime("16:00", "%H:%M").time())]
 
     results = []
@@ -93,7 +101,11 @@ def convert_and_analyze():
 
     csv_path = pdf_path.rsplit(".", 1)[0] + ".csv"
     pdf_to_csv(pdf_path, csv_path)
-    results_df = analyze_shifts(csv_path)
+    
+    # Get the selected toggle state (True for weekend, False for weekday)
+    is_weekend = weekend_toggle.get()
+
+    results_df = analyze_shifts(csv_path, is_weekend)
 
     for row in treeview.get_children():
         treeview.delete(row)
@@ -139,6 +151,13 @@ button_browse.grid(row=0, column=2, padx=5, pady=5)
 button_convert = ctk.CTkButton(frame, text="Convert and Analyze", command=convert_and_analyze)
 button_convert.grid(row=1, column=0, columnspan=3, pady=10)
 
+# Weekday/Weekend Toggle
+weekend_toggle_label = ctk.CTkLabel(frame, text="Toggle for Weekend Shifts:")
+weekend_toggle_label.grid(row=2, column=0, padx=5, pady=5)
+
+weekend_toggle = ctk.CTkSwitch(frame, text="Weekend", onvalue=True, offvalue=False)
+weekend_toggle.grid(row=2, column=1, padx=5, pady=5)
+
 # Appearance mode selection
 appearance_frame = ctk.CTkFrame(root)
 appearance_frame.pack(fill="x", padx=10, pady=5)
@@ -146,20 +165,19 @@ appearance_frame.pack(fill="x", padx=10, pady=5)
 label_appearance = ctk.CTkLabel(appearance_frame, text="Appearance Mode:")
 label_appearance.grid(row=0, column=0, padx=5)
 
-appearance_mode_options = ["Light", "Dark", "System"]
-appearance_dropdown = ctk.CTkOptionMenu(appearance_frame, values=appearance_mode_options, command=change_appearance_mode)
-appearance_dropdown.set("System")  # Set default appearance
-appearance_dropdown.grid(row=0, column=1, padx=5)
+appearance_mode_options = ["Light", "Dark"]
+appearance_mode_dropdown = ctk.CTkOptionMenu(appearance_frame, values=appearance_mode_options, command=change_appearance_mode)
+appearance_mode_dropdown.grid(row=0, column=1, padx=5)
 
-
-# Treeview to display results
-columns = ("Name", "Person ID", "Assigned Shift", "Minutes Outside Shift", "Keyed Out At", "Keyed In At")
-treeview = ttk.Treeview(root, columns=columns, show="headings")
+# Treeview for displaying results
+treeview = ttk.Treeview(root, columns=("Name", "Person ID", "Assigned Shift", "Minutes Outside Shift", "Keyed Out At", "Keyed In At"), show="headings")
+treeview.heading("Name", text="Name")
+treeview.heading("Person ID", text="Person ID")
+treeview.heading("Assigned Shift", text="Assigned Shift")
+treeview.heading("Minutes Outside Shift", text="Minutes Outside Shift")
+treeview.heading("Keyed Out At", text="Keyed Out At")
+treeview.heading("Keyed In At", text="Keyed In At")
 treeview.pack(padx=10, pady=10, fill="both", expand=True)
-
-for col in columns:
-    treeview.heading(col, text=col)
-    treeview.column(col, width=150)
 
 # Footer
 footer_frame = ctk.CTkFrame(root)
@@ -189,5 +207,5 @@ contact_info_label.bind("<Button-1>", open_website)
 # Center frame and start the main loop
 footer_frame.pack(anchor="center")
 
-# Start the CustomTkinter event loop
+
 root.mainloop()
